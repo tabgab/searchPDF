@@ -136,7 +136,8 @@ packages = [
     "langchain",
     "faiss-cpu",
     "tiktoken",
-    "colorama"
+    "colorama",
+    "texttable"
 ]
 #Check for required packages and install them if needed.
 def check_package(package_name):
@@ -158,7 +159,8 @@ for package in packages:
         install_package(package)
 
 # This is where you should put your OPENAI API KEY
-os.environ['OPENAI_API_KEY'] = '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'
+#os.environ['OPENAI_API_KEY'] = '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'
+os.environ['OPENAI_API_KEY'] = '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'
 
 #Check command line arguments, we need a question at least.
 if len(sys.argv) < 2:
@@ -267,14 +269,28 @@ else:
         current_hashes = calculate_hashes_in_folder(args.pdfp)
         store_hashes(args.pdfp, current_hashes)
     faiss_index = FAISS.load_local(index_file_path, OpenAIEmbeddings())
-    
+
+from texttable import Texttable    
 docs = faiss_index.similarity_search(question, k=4)
 for doc in docs:
-    print(Fore.BLUE+str(doc.metadata["page"]) + ":", Fore.WHITE+doc.page_content[:300])
+    #print(Fore.BLUE+str(doc.metadata["page"]) + ":", Fore.WHITE+doc.page_content[:300])
+    table = Texttable()
+    table.set_deco(Texttable.HEADER)
+    table.set_cols_align(["l"])
+    table.set_cols_valign(["m"])
+
+    content = Fore.CYAN+doc.page_content[:300]+Fore.WHITE
+    first_line = content.split('\n')[0]
+    header = Fore.BLUE+str(doc.metadata["page"])+" "+first_line+Fore.WHITE
+    after_first_newline = content.split('\n', 1)[1]
+    
+    print("\n")
+    table.add_rows([[header],[after_first_newline]]),
+    print(table.draw())
     print("Metadata is:"+Fore.YELLOW+str(doc.metadata)+Fore.WHITE)
     full_path = os.path.abspath(str(doc.metadata["source"]))
     if os_name.startswith('darwin'):
-        print(f"To jump directly to this section, copy this command: "+Fore.GREEN+"osascript openPage.scpt "+str(full_path)+" "+str(doc.metadata["page"])+Fore.WHITE)
+        print(f"To jump directly to this section, copy this command: \n"+Fore.GREEN+"osascript openPage.scpt "+str(full_path)+" "+str(doc.metadata["page"])+Fore.WHITE)
     elif os_name.startswith('win'):
         s = "file:///"+str(full_path)+"#page="+str(doc.metadata["page"])
         #print("tp was "+s)
