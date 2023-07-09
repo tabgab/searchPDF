@@ -120,6 +120,15 @@ def printhelp():
     print("")
     return
 
+#Check if there is an OpenAI key available. (There should be an openai_key.txt file in the same directory as searchPDF.py)
+if os.path.exists("openai_key.txt"):
+    print("OpenAI key found, proceeding.")
+else:
+    print(Fore.RED+"This program cannot function without an OpenAI key. There must be an"+Fore.CYAN+" openai_key.txt"+Fore.RED+
+    " file in the same directory as searchPDF, and it must contain your own unique OpenAI API key. Refer to the internet on how to get one."
+    +Fore.WHITE)
+    sys.exit()
+
 # Search for PDF documents in the folder specified as pdfp (PDF path)
 pdf_files = glob.glob(args.pdfp + "/*.pdf")
 
@@ -158,9 +167,7 @@ for package in packages:
     if not check_package(package):
         install_package(package)
 
-# This is where you should put your OPENAI API KEY
-#os.environ['OPENAI_API_KEY'] = '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'
-os.environ['OPENAI_API_KEY'] = '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'
+
 
 #Check command line arguments, we need a question at least.
 if len(sys.argv) < 2:
@@ -238,6 +245,19 @@ def compare_hashes(folder_path):
         return True
     else:
         return False
+
+
+
+#get OPENAI_API_KEY from config file
+def load_openai_key():
+    
+    with open('openai_key.txt', 'r') as file:
+        key = file.read().strip()
+    return key
+
+# Set key from config file
+openai_key = load_openai_key()
+os.environ['OPENAI_API_KEY'] = openai_key
 
 if haslocalindex == False: 
     print (Fore.RED+"There is no local index stored, building index of pdf files, this could take a while."+Fore.WHITE)
